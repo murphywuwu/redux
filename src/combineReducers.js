@@ -123,7 +123,7 @@ export default function combineReducers(reducers) {
         warning(`No reducer provided for key "${key}"`)
       }
     }
-
+    // 复制并过滤reducers对象到finalReducers对象中
     if (typeof reducers[key] === 'function') {
       finalReducers[key] = reducers[key]
     }
@@ -144,6 +144,8 @@ export default function combineReducers(reducers) {
     shapeAssertionError = e
   }
 
+  // 1.每调用一次combineReducers，combination函数都会通过闭包存储通过过滤reducers得到的finalReducers
+  // 2.当调用combination时，都会遍历自己的作用域上存储的finalReducers并计算得出最新的state
   return function combination(state = {}, action) {
     if (shapeAssertionError) {
       throw shapeAssertionError
@@ -163,10 +165,13 @@ export default function combineReducers(reducers) {
 
     let hasChanged = false
     const nextState = {}
+
     for (let i = 0; i < finalReducerKeys.length; i++) {
       const key = finalReducerKeys[i]
       const reducer = finalReducers[key]
-      const previousStateForKey = state[key]
+      const previousStateForKey = state[key] // 取出上一次的状态
+      // 如果该reducer是一个combination函数，则调用该combination函数并继续遍历存储在该reducer作用域链上的finalReducers
+      // 最后返回计算得出的state或者nextState
       const nextStateForKey = reducer(previousStateForKey, action)
       if (typeof nextStateForKey === 'undefined') {
         const errorMessage = getUndefinedStateErrorMessage(key, action)
@@ -175,6 +180,7 @@ export default function combineReducers(reducers) {
       nextState[key] = nextStateForKey
       hasChanged = hasChanged || nextStateForKey !== previousStateForKey
     }
+    // 如果state中有任何状态值改变过，都会返回nextState。只有state中的所有状态值都没有改变过的情况才会返回state
     return hasChanged ? nextState : state
   }
 }

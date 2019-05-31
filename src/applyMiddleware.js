@@ -18,6 +18,7 @@ import compose from './compose'
  */
 export default function applyMiddleware(...middlewares) {
   return createStore => (...args) => {
+    // create store
     const store = createStore(...args)
     let dispatch = () => {
       throw new Error(
@@ -31,10 +32,14 @@ export default function applyMiddleware(...middlewares) {
       dispatch: (...args) => dispatch(...args)
     }
     const chain = middlewares.map(middleware => middleware(middlewareAPI))
+    // a(b(c()))
+    // c() -> b(c:function) -> a(b: functions): function
+    // dispatch(action): a -> b -> c
     dispatch = compose(...chain)(store.dispatch)
 
     return {
       ...store,
+      // enhanced dispatch
       dispatch
     }
   }

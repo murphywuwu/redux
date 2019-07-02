@@ -178,6 +178,7 @@ export default function combineReducers(reducers) {
         throw new Error(errorMessage)
       }
       nextState[key] = nextStateForKey
+      // https://www.freecodecamp.org/news/why-redux-needs-reducers-to-be-pure-functions-d438c58ae468/
       hasChanged = hasChanged || nextStateForKey !== previousStateForKey
     }
     // 如果state中有任何状态值改变过，都会返回nextState。只有state中的所有状态值都没有改变过的情况才会返回state
